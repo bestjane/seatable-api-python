@@ -39,15 +39,16 @@ class SeaTableAPI(object):
     """SeaTable API
     """
 
-    def __init__(self, token, server_url):
+    def __init__(self, token, server_url, fit=False):
         """
         :param token: str
         :param server_url: str
+        :param fit: Boolean, default: false
         """
         self.token = token
         self.server_url = parse_server_url(server_url)
-        self.dtable_server_url = None
-        self.dtable_db_url = None
+        self.dtable_server_url = self.server_url if fit else None
+        self.dtable_db_url = self.server_url if fit else None
         self.jwt_token = None
         self.jwt_exp = None
         self.headers = None
@@ -98,8 +99,10 @@ class SeaTableAPI(object):
         response = requests.get(url, headers=headers, timeout=self.timeout)
         data = parse_response(response)
 
-        self.dtable_server_url = parse_server_url(data.get('dtable_server'))
-        self.dtable_db_url = parse_server_url(data.get('dtable_db', ''))
+        if not self.dtable_server_url:
+            self.dtable_server_url = parse_server_url(data.get('dtable_server'))
+        if not self.dtable_db_url:
+            self.dtable_db_url = parse_server_url(data.get('dtable_db', ''))
         self.jwt_token = data.get('access_token')
         self.headers = parse_headers(self.jwt_token)
         self.workspace_id = data.get('workspace_id')
